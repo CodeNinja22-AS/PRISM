@@ -35,11 +35,14 @@ def analyze_cluster(request: AnalysisRequest):
     robustness = adv_engine.evaluate_robustness(results)
     
     # Update Neo4j graph with calculated intelligence metrics
-    graph_engine.create_actor_cluster(
-        cluster_id=request.cluster_id,
-        confidence=results['baseline'],
-        robustness=robustness
-    )
+    try:
+        graph_engine.create_actor_cluster(
+            cluster_id=request.cluster_id,
+            confidence=results['baseline'],
+            robustness=robustness
+        )
+    except ConnectionError as e:
+        raise HTTPException(status_code=503, detail=f"Service Unavailable: {str(e)}")
     
     return {
         "cluster_id": request.cluster_id,

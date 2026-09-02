@@ -55,3 +55,9 @@ Thumbs.db
 # Project Specific Ignored Folders
 data/
 docs/
+
+# Testing & Logs
+.pytest_cache/
+.coverage
+htmlcov/
+*.log

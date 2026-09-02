@@ -26,17 +26,24 @@ class GraphEngine:
 
     def create_actor_cluster(self, cluster_id, confidence, robustness):
         """Creates a central Threat Actor Cluster node."""
+        if self.driver is None:
+            raise ConnectionError("Neo4j database is unreachable")
         query = (
             "MERGE (a:ActorCluster { id: $cluster_id }) "
             "SET a.confidence = $confidence, a.robustness = $robustness, a.last_updated = timestamp() "
             "RETURN a"
         )
-        with self.driver.session() as session:
-            result = session.run(query, cluster_id=cluster_id, confidence=confidence, robustness=robustness)
-            return result.single()
+        try:
+            with self.driver.session() as session:
+                result = session.run(query, cluster_id=cluster_id, confidence=confidence, robustness=robustness)
+                return result.single()
+        except Exception as e:
+            raise ConnectionError(f"Neo4j transaction failed: {e}")
 
     def add_persona(self, persona_id, aliases, actor_cluster_id=None):
         """Creates a Persona node and optionally links it to an ActorCluster."""
+        if self.driver is None:
+            raise ConnectionError("Neo4j database is unreachable")
         query = (
             "MERGE (p:Persona { id: $persona_id }) "
             "SET p.aliases = $aliases, p.last_updated = timestamp() "
@@ -50,12 +57,17 @@ class GraphEngine:
             
         query += "RETURN p"
         
-        with self.driver.session() as session:
-            result = session.run(query, **params)
-            return result.single()
+        try:
+            with self.driver.session() as session:
+                result = session.run(query, **params)
+                return result.single()
+        except Exception as e:
+            raise ConnectionError(f"Neo4j transaction failed: {e}")
 
     def add_infrastructure(self, domain, ip_address, persona_id=None):
         """Adds a server/domain and optionally connects to a Persona."""
+        if self.driver is None:
+            raise ConnectionError("Neo4j database is unreachable")
         query = (
             "MERGE (s:Server { ip: $ip_address }) "
             "MERGE (d:Domain { name: $domain }) "
@@ -70,18 +82,26 @@ class GraphEngine:
             
         query += "RETURN s, d"
         
-        with self.driver.session() as session:
-            result = session.run(query, **params)
-            return result.single()
+        try:
+            with self.driver.session() as session:
+                result = session.run(query, **params)
+                return result.single()
+        except Exception as e:
+            raise ConnectionError(f"Neo4j transaction failed: {e}")
 
     def link_wallets(self, wallet_a, wallet_b, transaction_hash):
         """Links two wallets via a transaction."""
+        if self.driver is None:
+            raise ConnectionError("Neo4j database is unreachable")
         query = (
             "MERGE (wa:Wallet { address: $wallet_a }) "
             "MERGE (wb:Wallet { address: $wallet_b }) "
             "MERGE (wa)-[:TRANSACTED_WITH { tx: $tx_hash, timestamp: timestamp() }]->(wb) "
             "RETURN wa, wb"
         )
-        with self.driver.session() as session:
-            result = session.run(query, wallet_a=wallet_a, wallet_b=wallet_b, tx_hash=transaction_hash)
-            return result.single()
+        try:
+            with self.driver.session() as session:
+                result = session.run(query, wallet_a=wallet_a, wallet_b=wallet_b, tx_hash=transaction_hash)
+                return result.single()
+        except Exception as e:
+            raise ConnectionError(f"Neo4j transaction failed: {e}")

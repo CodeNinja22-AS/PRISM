@@ -28,17 +28,10 @@ def test_negative_evidence_robustness_flaw():
     adv = AdversarialEngine(fusion)
     results = adv.run_leave_one_out_analysis(prior=0.5)
     
-    # Baseline will be 0.05
-    # Without Alibi, it reverts to 0.5
-    # drop = base (0.05) - new (0.5) = -0.45
-    # Wait, max_drop in the code:
-    # `drop = base_confidence - new_confidence`
-    # `if drop > max_drop: max_drop = drop`
-    # If the drop is negative, max_drop remains 0 (initialized to 0).
-    # Ah, if max_drop remains 0, robustness = 1.0 - (0 / base) = 1.0.
-    
+    # In the fixed implementation, removing the contradictory alibi causes
+    # a massive swing in confidence (from 0.05 to 0.5), severely degrading robustness.
     robustness = adv.evaluate_robustness(results)
-    assert robustness == 1.0
+    assert robustness == 0.0
 
 def test_adversarial_questions_generation():
     fusion = EvidenceFusionEngine()

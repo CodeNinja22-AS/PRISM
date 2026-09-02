@@ -8,8 +8,8 @@ class EvidenceItem:
         
     def get_weighted_score(self):
         """Applies reliability penalty/weight to the raw score."""
-        # A simple linear penalty. In a real system, this would be non-linear.
-        return self.score * self.reliability
+        # Bayesian non-linear scaling: pulls score to neutral prior (0.5) when reliability is 0.0
+        return self.score * self.reliability + 0.5 * (1.0 - self.reliability)
 
 class EvidenceFusionEngine:
     """

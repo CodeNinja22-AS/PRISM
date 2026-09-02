@@ -43,11 +43,8 @@ def test_zero_reliability_bug():
     
     prob, scores = engine.calculate_hybrid_bayesian_probability(prior=0.5)
     
-    # In the current implementation: 0.99 * 0.0 = 0.0. 
-    # Clamped to 0.001. Log odds of 0.001 is extremely negative.
-    # This turns "unreliable positive evidence" into "strong negative evidence".
-    # This is a mathematical flaw in the current codebase that we are exposing!
-    assert prob < 0.01
+    # In the fixed implementation, 0.0 reliability neutralizes the evidence to 0.5 (neutral)
+    assert prob == 0.5
 
 def test_prior_boundaries():
     engine = EvidenceFusionEngine()

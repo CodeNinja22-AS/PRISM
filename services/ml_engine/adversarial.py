@@ -55,9 +55,9 @@ class AdversarialEngine:
             new_confidence, _ = temp_engine.calculate_hybrid_bayesian_probability(prior=prior)
             leave_one_out_results[group_to_remove] = new_confidence
             
-            drop = base_confidence - new_confidence
-            if drop > max_drop:
-                max_drop = drop
+            impact = abs(base_confidence - new_confidence)
+            if impact > max_drop:
+                max_drop = impact
                 most_critical_group = group_to_remove
                 
         return {

@@ -5,3 +5,12 @@ psycopg2-binary==2.9.9
 neo4j==5.17.0
 pydantic==2.5.3
 python-dotenv==1.0.0
+numpy
+scipy
+fastdtw
+scikit-learn
+xgboost
+spacy
+sentence-transformers
+networkx
+Pillow

@@ -1,0 +1,70 @@
+@import "tailwindcss";
+
+@theme {
+  --color-midnight: #1A202C;
+  --color-platinum: #E5E4E2;
+  --color-cream: #FFFDD0;
+
+  --color-glass-border: rgba(255, 255, 255, 0.1);
+  --color-glass-bg: rgba(255, 255, 255, 0.05);
+}
+
+@layer base {
+  body {
+    background-color: var(--color-midnight);
+    color: var(--color-platinum);
+    font-family: Arial, Helvetica, sans-serif;
+  }
+}
+
+@layer utilities {
+  .glass-panel {
+    background: var(--color-glass-bg);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--color-glass-border);
+    border-radius: 1rem;
+  }
+
+  .clay-card {
+    background: var(--color-cream);
+    color: var(--color-midnight);
+    border-radius: 1.5rem;
+    box-shadow: 
+      8px 8px 16px rgba(0, 0, 0, 0.4),
+      inset 2px 2px 4px rgba(255, 255, 255, 0.8),
+      inset -2px -2px 4px rgba(0, 0, 0, 0.2);
+  }
+
+  .clay-button {
+    background: var(--color-cream);
+    color: var(--color-midnight);
+    border-radius: 9999px;
+    font-weight: 600;
+    box-shadow: 
+      4px 4px 8px rgba(0, 0, 0, 0.4),
+      inset 1px 1px 2px rgba(255, 255, 255, 0.8),
+      inset -1px -1px 2px rgba(0, 0, 0, 0.2);
+    transition: transform 0.1s, box-shadow 0.1s;
+  }
+  
+  .clay-button:active {
+    transform: scale(0.98);
+    box-shadow: 
+      2px 2px 4px rgba(0, 0, 0, 0.4),
+      inset 2px 2px 4px rgba(0, 0, 0, 0.1),
+      inset -1px -1px 2px rgba(255, 255, 255, 0.2);
+  }
+
+  .progress-bar-bg {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    background-color: var(--color-cream);
+    height: 100%;
+    border-radius: 9999px;
+  }
+}

@@ -41,3 +41,71 @@ pub fn correlate_flows(flows: &[PacketFlow]) -> Vec<CorrelationResult> {
     
     results
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_perfect_correlation() {
+        let flows = vec![
+            PacketFlow {
+                flow_id: "F1".to_string(), source_ip: "1.1.1.1".to_string(), dest_ip: "2.2.2.2".to_string(),
+                start_time: 1.0, end_time: 2.0, total_bytes: 1000, packet_count: 10,
+            },
+            PacketFlow {
+                flow_id: "F2".to_string(), source_ip: "3.3.3.3".to_string(), dest_ip: "4.4.4.4".to_string(),
+                start_time: 1.0, end_time: 2.0, total_bytes: 1000, packet_count: 10,
+            }
+        ];
+        
+        let results = correlate_flows(&flows);
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].confidence_score, 1.0);
+    }
+
+    #[test]
+    fn test_confidence_clamping() {
+        let flows = vec![
+            PacketFlow {
+                flow_id: "F1".to_string(), source_ip: "A".to_string(), dest_ip: "B".to_string(),
+                start_time: 1.0, end_time: 2.0, total_bytes: 1000, packet_count: 10,
+            },
+            PacketFlow {
+                // High enough diff to make confidence negative, should be clamped to 0.1
+                flow_id: "F2".to_string(), source_ip: "C".to_string(), dest_ip: "D".to_string(),
+                start_time: 1.49, end_time: 2.0, total_bytes: 5900, packet_count: 10,
+            }
+        ];
+        
+        let results = correlate_flows(&flows);
+        assert_eq!(results.len(), 1);
+        assert_eq!(results[0].confidence_score, 0.1);
+    }
+
+    #[test]
+    fn test_u64_to_i64_overflow_risk() {
+        // Rust's (u64 as i64) can wrap if > i64::MAX
+        // This is a brutal test of the data type boundaries
+        let max_val = u64::MAX; 
+        let flows = vec![
+            PacketFlow {
+                flow_id: "F1".to_string(), source_ip: "A".to_string(), dest_ip: "B".to_string(),
+                start_time: 1.0, end_time: 2.0, total_bytes: max_val, packet_count: 10,
+            },
+            PacketFlow {
+                flow_id: "F2".to_string(), source_ip: "C".to_string(), dest_ip: "D".to_string(),
+                start_time: 1.0, end_time: 2.0, total_bytes: max_val - 100, packet_count: 10,
+            }
+        ];
+        
+        // This won't panic, but due to wrapping, the volume difference might be incorrectly evaluated.
+        let results = correlate_flows(&flows);
+        assert_eq!(results.len(), 1);
+        // The difference is 100 bytes. Confidence should be 1.0 - (100 / 10000.0) = 0.99.
+        // If it wrapped incorrectly, difference would be huge and results would be empty or 0.1.
+        // Actually, u64::MAX as i64 is -1. (u64::MAX - 100) as i64 is -101.
+        // The difference between -1 and -101 is 100. It surprisingly works due to two's complement!
+        assert!(results[0].confidence_score > 0.9);
+    }
+}

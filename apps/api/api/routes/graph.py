@@ -29,3 +29,20 @@ def get_infrastructure_overlap(session: Neo4jSession = Depends(get_neo4j)):
     """
     result = session.run(query)
     return [dict(record) for record in result]
+
+@router.get("/topology/{id}")
+def get_topology(id: str):
+    """
+    Mock endpoint for the PRISM Dashboard to display the React Flow graph.
+    """
+    return {
+      "nodes": [
+        {"id": "1", "data": {"label": f"{id} (Hidden Service)"}, "position": {"x": 250, "y": 50}},
+        {"id": "2", "data": {"label": "Clearnet IP 192.168.1.100"}, "position": {"x": 100, "y": 200}},
+        {"id": "3", "data": {"label": "Bitcoin Wallet 1A1zP..."}, "position": {"x": 400, "y": 200}}
+      ],
+      "edges": [
+        {"id": "e1-2", "source": "1", "target": "2", "label": "Hosted On", "animated": True},
+        {"id": "e1-3", "source": "1", "target": "3", "label": "Receives Funds", "animated": True}
+      ]
+    }

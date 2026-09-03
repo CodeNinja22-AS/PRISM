@@ -1,0 +1,23 @@
+# Neo4j AuraDB Configuration (Used by the API)
+NEO4J_URI=neo4j+s://9b4f7ffc.databases.neo4j.io
+NEO4J_USER=9b4f7ffc
+NEO4J_PASSWORD=AEf5AL8VxPVupFZE5tCwUZL9XidPwFXwht_f7SuKV_s
+
+# Local Postgres Configuration (Used by API and docker-compose)
+POSTGRES_USER=prism_admin
+POSTGRES_PASSWORD=prism_secure_password
+POSTGRES_DB=prism_db
+POSTGRES_HOST=localhost
+POSTGRES_PORT=5432
+
+# Local Redis Configuration
+REDIS_URL=redis://localhost:6379
+
+# MinIO (Optional - for docker-compose if needed)
+MINIO_ROOT_USER=prism_minio_admin
+MINIO_ROOT_PASSWORD=prism_minio_secure
+
+# Threat Intelligence APIs
+VIRUSTOTAL_API_KEY=b6533e9f411c738345210de84428779afec5dfcec46f4fb479cdd91e490d1057
+BLOCKCYPHER_API_KEY=2fb630341d5946199a3631a7cc48bf8a
+SHODAN_API_KEY=ZYkJ17wV3HYEPDVVnwnvpwaGGfEdPQEW

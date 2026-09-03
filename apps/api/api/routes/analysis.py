@@ -14,8 +14,39 @@ from services.graph_engine.neo4j_driver import GraphEngine
 router = APIRouter()
 graph_engine = GraphEngine()
 
+import uuid
+from pydantic import BaseModel
+
+# Try to import celery worker task, fail gracefully if not accessible in this context
+try:
+    from apps.worker.celery_worker import ingest_target
+except ImportError:
+    ingest_target = None
+
 class AnalysisRequest(BaseModel):
     cluster_id: str
+
+class IngestRequest(BaseModel):
+    target: str
+    target_type: str # 'ip', 'domain', 'wallet'
+    
+@router.post("/ingest")
+def trigger_ingestion(request: IngestRequest):
+    """
+    Trigger the Celery background worker to ingest a target.
+    """
+    investigation_id = f"INV-{uuid.uuid4().hex[:8].upper()}"
+    
+    if ingest_target:
+        # Submit to Celery
+        task = ingest_target.delay(request.target, request.target_type, investigation_id)
+        return {
+            "status": "Processing",
+            "task_id": task.id,
+            "investigation_id": investigation_id
+        }
+    else:
+        raise HTTPException(status_code=500, detail="Celery worker not configured")
 
 @router.post("/cluster")
 def analyze_cluster(request: AnalysisRequest):
@@ -53,36 +84,47 @@ def analyze_cluster(request: AnalysisRequest):
     }
 
 @router.get("/investigation/{id}")
-def get_investigation(id: str):
+def get_investigation(id: str, session: Neo4jSession = Depends(get_neo4j)):
     """
-    Mock endpoint for the PRISM Dashboard to display investigation details.
-    In production, this fetches from the Neo4j ActorCluster nodes.
+    Fetches investigation details and metrics from Neo4j ActorCluster nodes.
     """
+    # Query for the ActorCluster and its connected Evidence
+    query = """
+    MATCH (c:ActorCluster {id: $id})
+    OPTIONAL MATCH (c)-[:SUPPORTED_BY]->(e:Evidence)
+    RETURN c, collect(e) as evidence_list
+    """
+    
+    result = session.run(query, id=id).data()
+    
+    if not result or not result[0].get("c"):
+        # Fallback if not found in db, maybe it's just being processed
+        raise HTTPException(status_code=404, detail="Investigation not found")
+        
+    cluster_node = result[0]["c"]
+    evidence_nodes = result[0]["evidence_list"]
+    
+    # Process evidence
+    evidence_breakdown = []
+    for ev in evidence_nodes:
+        if ev:
+            evidence_breakdown.append({
+                "name": ev.get("name", "Unknown Evidence"),
+                "group": ev.get("group", "General"),
+                "score": ev.get("score", 0.0)
+            })
+            
+    # Default structure
     return {
-      "title": "AlphaBay Vendor Migration",
-      "id": id,
-      "metrics": {
-        "confidence": 0.94,
-        "robustness": 0.82
-      },
-      "evidence_breakdown": [
-        {"name": "Traffic Timing Correlation", "group": "Network", "score": 0.92},
-        {"name": "Wallet Co-spending", "group": "Blockchain", "score": 0.87},
-        {"name": "Shared Clearnet IP", "group": "Infrastructure", "score": 0.81},
-        {"name": "Active Hours Overlap", "group": "Behavior", "score": 0.78},
-        {"name": "Linguistic Profile", "group": "Stylometry", "score": 0.74}
-      ],
-      "adversarial_report": {
-        "questions": [
-          "Could traffic similarity be natural coincidence (e.g. streaming same video)?",
-          "Could the wallet relationship be indirect (e.g. common darknet market deposit wallet)?"
-        ],
-        "leave_one_out": {
-          "Network": 0.65,
-          "Blockchain": 0.72,
-          "Infrastructure": 0.89,
-          "Behavior": 0.91,
-          "Stylometry": 0.93
+        "title": cluster_node.get("title", f"Investigation {id}"),
+        "id": id,
+        "metrics": {
+            "confidence": cluster_node.get("confidence", 0.0),
+            "robustness": cluster_node.get("robustness", 0.0)
+        },
+        "evidence_breakdown": evidence_breakdown,
+        "adversarial_report": {
+            "questions": cluster_node.get("adversarial_questions", []),
+            "leave_one_out": cluster_node.get("leave_one_out_scores", {})
         }
-      }
     }

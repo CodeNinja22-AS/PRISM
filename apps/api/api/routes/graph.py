@@ -31,18 +31,54 @@ def get_infrastructure_overlap(session: Neo4jSession = Depends(get_neo4j)):
     return [dict(record) for record in result]
 
 @router.get("/topology/{id}")
-def get_topology(id: str):
+def get_topology(id: str, session: Neo4jSession = Depends(get_neo4j)):
     """
-    Mock endpoint for the PRISM Dashboard to display the React Flow graph.
+    Fetches the actual React Flow topology from Neo4j based on investigation or cluster id.
     """
+    query = """
+    MATCH (n)-[r]-(m)
+    WHERE n.investigation_id = $id OR n.cluster_id = $id OR n.id = $id
+    RETURN n, r, m
+    LIMIT 300
+    """
+    result = session.run(query, id=id)
+    
+    nodes_dict = {}
+    edges_dict = {}
+    
+    for record in result:
+        n = record["n"]
+        if n.element_id not in nodes_dict:
+            label = list(n.labels)[0] if n.labels else "Unknown"
+            name = n.get("name") or n.get("handle") or n.get("url") or n.get("value") or label
+            nodes_dict[n.element_id] = {
+                "id": str(n.element_id),
+                "data": {"label": name, "type": label},
+                "position": {"x": 0, "y": 0} # Frontend layout engine (like Dagre) should set positions
+            }
+            
+        m = record["m"]
+        if m.element_id not in nodes_dict:
+            label = list(m.labels)[0] if m.labels else "Unknown"
+            name = m.get("name") or m.get("handle") or m.get("url") or m.get("value") or label
+            nodes_dict[m.element_id] = {
+                "id": str(m.element_id),
+                "data": {"label": name, "type": label},
+                "position": {"x": 0, "y": 0}
+            }
+            
+        r = record["r"]
+        edge_id = str(r.element_id)
+        if edge_id not in edges_dict:
+            edges_dict[edge_id] = {
+                "id": edge_id,
+                "source": str(r.start_node.element_id),
+                "target": str(r.end_node.element_id),
+                "label": r.type,
+                "animated": True
+            }
+        
     return {
-      "nodes": [
-        {"id": "1", "data": {"label": f"{id} (Hidden Service)"}, "position": {"x": 250, "y": 50}},
-        {"id": "2", "data": {"label": "Clearnet IP 192.168.1.100"}, "position": {"x": 100, "y": 200}},
-        {"id": "3", "data": {"label": "Bitcoin Wallet 1A1zP..."}, "position": {"x": 400, "y": 200}}
-      ],
-      "edges": [
-        {"id": "e1-2", "source": "1", "target": "2", "label": "Hosted On", "animated": True},
-        {"id": "e1-3", "source": "1", "target": "3", "label": "Receives Funds", "animated": True}
-      ]
+        "nodes": list(nodes_dict.values()),
+        "edges": list(edges_dict.values())
     }

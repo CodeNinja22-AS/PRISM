@@ -138,31 +138,31 @@ class PersonaIntelligenceEngine:
         p2 = self.personas[alias2]
         
         score = 0.0
-        max_score = 4.0 # 4 key metrics compared
+        total_weight = 6.0 # Sum of weights
         
-        # 1. Active Hours Overlap (Jaccard Similarity)
+        # 1. Active Hours Overlap (Jaccard Similarity) - Weight: 1.0 (Easy to fake/timezone dependent)
         set1 = set(p1.active_hours)
         set2 = set(p2.active_hours)
         if set1 and set2:
             intersection = len(set1.intersection(set2))
             union = len(set1.union(set2))
-            score += (intersection / union)
+            score += (intersection / union) * 1.0
 
-        # 2. Session Duration Similarity
+        # 2. Session Duration Similarity - Weight: 1.5 (Medium to fake, subconscious habit)
         if p1.median_session_minutes > 0 or p2.median_session_minutes > 0:
             diff = abs(p1.median_session_minutes - p2.median_session_minutes)
             max_dur = max(p1.median_session_minutes, p2.median_session_minutes)
-            score += max(0, 1.0 - (diff / max_dur))
+            score += max(0, 1.0 - (diff / max_dur)) * 1.5
             
-        # 3. Weekly Activity Overlap
+        # 3. Weekly Activity Overlap - Weight: 1.0 (Easy to fake, work-schedule dependent)
         w1 = set(p1.weekly_activity_days)
         w2 = set(p2.weekly_activity_days)
         if w1 and w2:
              intersection = len(w1.intersection(w2))
              union = len(w1.union(w2))
-             score += (intersection / union)
+             score += (intersection / union) * 1.0
              
-        # 4. Response Latency Overlap
+        # 4. Response Latency Overlap - Weight: 2.5 (Hard to fake invariant - neurological/typing speed)
         # Check if the ranges overlap
         r1_min, r1_max = p1.typical_response_minutes
         r2_min, r2_max = p2.typical_response_minutes
@@ -173,11 +173,11 @@ class PersonaIntelligenceEngine:
         if overlap_start <= overlap_end and (r1_max - r1_min) > 0 and (r2_max - r2_min) > 0:
             overlap_range = overlap_end - overlap_start
             max_range = max(r1_max - r1_min, r2_max - r2_min)
-            score += (overlap_range / max_range)
+            score += (overlap_range / max_range) * 2.5
         elif r1_max == r2_max and r1_min == r2_min:
-             score += 1.0 # Exact match
+             score += 1.0 * 2.5 # Exact match
 
-        return score / max_score
+        return score / total_weight
 
 if __name__ == "__main__":
     # --- Example Implementation ---

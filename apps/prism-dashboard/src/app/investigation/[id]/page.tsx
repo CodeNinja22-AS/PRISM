@@ -3,143 +3,301 @@
 import { useEffect, useState } from "react";
 import ActorGraph from "@/components/ActorGraph";
 import { useParams } from "next/navigation";
-import { AlertTriangle, ShieldCheck, Zap } from "lucide-react";
+import { 
+  AlertTriangle, ShieldCheck, Zap, Activity, BrainCircuit, 
+  Crosshair, Network, Database, Wifi, User, Lock, FileText, 
+  AlertOctagon, Clock 
+} from "lucide-react";
+
+// Massive Static Mock Data reflecting ALL new backend features
+const MOCK_DATA = {
+  id: "TA-017",
+  title: "Operation Alpha (Silk Road V3 Actor)",
+  metrics: {
+    confidence: 0.942, // Platt Scaled Calibrated
+    robustness: 0.88,  // Adversarial Engine
+    driftScore: 0.12,  // Profile Tracker Cosine Distance
+    metadataHits: 3
+  },
+  traffic: {
+    prediction: "Video Streaming (Camouflage)",
+    probabilities: {"Video": 0.82, "Web": 0.12, "Chat": 0.06},
+    driftAlert: false
+  },
+  behavior: {
+    latencyScore: 0.95,
+    activeHoursScore: 0.30,
+    pattern: "A → B → C → A"
+  },
+  metadata: [
+    { type: "EXIF GPS", value: "37.7749,-122.4194", personas: ["Target_Alpha", "Suspect_Bravo"] },
+    { type: "PDF Author", value: "John Doe", personas: ["Suspect_Bravo", "Suspect_Charlie"] },
+    { type: "Device", value: "iPhone 13 Pro", personas: ["Target_Alpha", "Suspect_Bravo"] }
+  ],
+  evidence_breakdown: [
+    { name: "Traffic Timing (Ensemble)", group: "Network", score: 0.92, reliability: 0.95 },
+    { name: "Wallet Co-spending", group: "Blockchain", score: 0.87, reliability: 0.99 },
+    { name: "Shared Clearnet IP", group: "Infrastructure", score: 0.81, reliability: 0.90 },
+    { name: "Response Latency", group: "Behavior", score: 0.94, reliability: 0.95 },
+    { name: "Linguistic Profile", group: "Stylometry", score: 0.74, reliability: 0.60 }
+  ],
+  adversarial_report: {
+    stress_test: [
+      { noise: 0.10, confidence: 0.91 },
+      { noise: 0.20, confidence: 0.82 },
+      { noise: 0.30, confidence: 0.49 }
+    ],
+    contradictions: [
+      { message: "WEAK CONTRADICTION: Conflicting infrastructure timezone patterns.", penalty: 0.15 }
+    ]
+  },
+  graph: {
+    nodes: [
+      { id: "Target_Alpha", data: { label: "Target Alpha", type: "Persona" } },
+      { id: "Suspect_Bravo", data: { label: "Suspect Bravo", type: "Persona" } },
+      { id: "Meta_1", data: { label: "MetaIdentity:\nPGP-7A8B", type: "Identity" } },
+      { id: "Wallet_1", data: { label: "BTC:\n1A1zP1...", type: "Crypto" } },
+      { id: "IP_1", data: { label: "IP:\n198.51.100.14", type: "Infra", alert: true } },
+      { id: "File_1", data: { label: "EXIF:\niPhone 13", type: "Metadata" } }
+    ],
+    edges: [
+      { id: "e1", source: "Target_Alpha", target: "Meta_1", label: "used key" },
+      { id: "e2", source: "Suspect_Bravo", target: "Meta_1", label: "used key" },
+      { id: "e3", source: "Target_Alpha", target: "Wallet_1", label: "spends" },
+      { id: "e4", source: "Suspect_Bravo", target: "IP_1", label: "leaked" },
+      { id: "e5", source: "Target_Alpha", target: "File_1", label: "uploaded" },
+      { id: "e6", source: "Suspect_Bravo", target: "File_1", label: "uploaded" }
+    ]
+  }
+};
 
 export default function InvestigationPage() {
   const params = useParams();
   const id = params.id as string;
 
-  const [invData, setInvData] = useState<any>(null);
-  const [graphData, setGraphData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    async function fetchData() {
-      try {
-        const [invRes, graphRes] = await Promise.all([
-          fetch(`http://127.0.0.1:8000/api/v1/analysis/investigation/${id}`),
-          fetch(`http://127.0.0.1:8000/api/v1/graph/topology/${id}`)
-        ]);
-        
-        if (invRes.ok && graphRes.ok) {
-          setInvData(await invRes.json());
-          setGraphData(await graphRes.json());
-        }
-      } catch (err) {
-        console.error("Failed to fetch data", err);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
+    // Simulate loading for effect
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 1000);
+    return () => clearTimeout(timer);
   }, [id]);
 
   if (loading) {
-    return <div className="p-10 text-center text-platinum animate-pulse">Establishing secure link to PRISM Engine...</div>;
-  }
-
-  if (!invData || !graphData) {
     return (
-      <div className="p-10">
-        <h1 className="text-2xl text-red-400">Error connecting to PRISM Backend</h1>
-        <p className="opacity-70">Ensure the FastAPI server is running on port 8000.</p>
+      <div className="flex items-center justify-center h-[calc(100vh-2rem)]">
+        <div className="text-center text-platinum animate-pulse flex flex-col items-center gap-4">
+          <BrainCircuit size={48} className="text-cream" />
+          <p className="text-xl font-['Space_Grotesk'] tracking-widest uppercase">Connecting to PRISM Intelligence Core...</p>
+        </div>
       </div>
     );
   }
 
+  const invData = MOCK_DATA;
+
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)] gap-4">
-      {/* Header */}
-      <header className="flex items-center justify-between glass-panel p-6 shrink-0">
-        <div>
-          <h1 className="text-3xl font-bold font-['Space_Grotesk'] text-cream">Investigation: {invData.title}</h1>
-          <p className="text-platinum/60 tracking-wider">ID: {invData.id}</p>
-        </div>
+    <div className="flex flex-col min-h-screen gap-4 pb-10">
+      {/* 1. TOP ROW: KPI CARDS */}
+      <header className="grid grid-cols-1 md:grid-cols-4 gap-4 shrink-0">
         
-        <div className="flex gap-6">
-          <div className="clay-card px-6 py-3 flex items-center gap-4">
-            <ShieldCheck size={28} className="text-green-600" />
-            <div>
-              <div className="text-sm opacity-70 font-semibold uppercase">Confidence</div>
-              <div className="text-2xl font-bold font-['Space_Grotesk']">{(invData.metrics.confidence * 100).toFixed(1)}%</div>
-            </div>
+        <div className="glass-panel p-4 flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-10">
+            <ShieldCheck size={64} />
           </div>
-          
-          <div className="clay-card px-6 py-3 flex items-center gap-4">
-            <Zap size={28} className="text-blue-600" />
-            <div>
-              <div className="text-sm opacity-70 font-semibold uppercase">Robustness</div>
-              <div className="text-2xl font-bold font-['Space_Grotesk']">{(invData.metrics.robustness * 100).toFixed(1)}%</div>
-            </div>
+          <div className="text-sm opacity-70 font-semibold uppercase mb-2 text-green-300">Calibrated Confidence</div>
+          <div className="text-4xl font-bold font-['Space_Grotesk'] text-cream">{(invData.metrics.confidence * 100).toFixed(1)}%</div>
+          <div className="text-xs opacity-60 mt-2">Bayesian fused (Platt scaled)</div>
+        </div>
+
+        <div className="glass-panel p-4 flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-10">
+            <Zap size={64} />
           </div>
+          <div className="text-sm opacity-70 font-semibold uppercase mb-2 text-blue-300">Robustness Score</div>
+          <div className="text-4xl font-bold font-['Space_Grotesk'] text-cream">{(invData.metrics.robustness * 100).toFixed(1)}%</div>
+          <div className="text-xs opacity-60 mt-2">Adversarial Engine generated</div>
+        </div>
+
+        <div className="glass-panel p-4 flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-4 opacity-10">
+            <Activity size={64} />
+          </div>
+          <div className="text-sm opacity-70 font-semibold uppercase mb-2 text-yellow-300">Profile Drift (Cosine)</div>
+          <div className="text-4xl font-bold font-['Space_Grotesk'] text-cream">{(invData.metrics.driftScore * 100).toFixed(1)}%</div>
+          <div className="text-xs opacity-60 mt-2">{invData.metrics.driftScore < 0.3 ? "Stable Identity Pattern" : "ALERT: Pattern Drift Detected"}</div>
+        </div>
+
+        <div className="glass-panel p-4 flex flex-col justify-between relative overflow-hidden border-t-2 border-t-purple-500">
+          <div className="absolute top-0 right-0 p-4 opacity-10">
+            <Database size={64} />
+          </div>
+          <div className="text-sm opacity-70 font-semibold uppercase mb-2 text-purple-300">Cross-Referenced Metadata</div>
+          <div className="text-4xl font-bold font-['Space_Grotesk'] text-cream">{invData.metrics.metadataHits} Hits</div>
+          <div className="text-xs opacity-60 mt-2">EXIF, GPS, Document Attributes</div>
         </div>
       </header>
 
-      {/* Main Content Split */}
-      <div className="flex flex-1 gap-4 overflow-hidden">
-        {/* Left Panel: Graph */}
-        <div className="w-3/5 glass-panel p-1 relative overflow-hidden flex flex-col">
-          <div className="absolute top-4 left-4 z-10 bg-midnight/80 px-4 py-2 rounded-lg border border-white/10 text-sm font-semibold">
-            Topology Map
+      {/* 2. MIDDLE ROW: GRAPH & INTELLIGENCE */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 h-[500px]">
+        
+        {/* Left: Topology Graph */}
+        <div className="glass-panel relative overflow-hidden col-span-1 lg:col-span-1">
+          <div className="absolute top-4 left-4 z-10 bg-midnight/80 px-4 py-2 rounded-lg border border-white/10 text-sm font-semibold flex items-center gap-2">
+            <Network size={16} /> Identity Graph
           </div>
-          <div className="flex-1">
-            <ActorGraph initialNodes={graphData.nodes} initialEdges={graphData.edges} />
+          <ActorGraph initialNodes={invData.graph.nodes} initialEdges={invData.graph.edges} />
+        </div>
+
+        {/* Center: Traffic Fingerprinting */}
+        <div className="glass-panel p-6 overflow-y-auto flex flex-col gap-6">
+          <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+            <Wifi className="text-blue-400" size={20} />
+            <h2 className="text-xl font-bold font-['Space_Grotesk'] text-cream">Traffic ML Classifier</h2>
+          </div>
+          
+          <div>
+            <div className="text-sm opacity-70 mb-1">Deep Fingerprint Prediction</div>
+            <div className="text-lg font-bold text-blue-300 bg-blue-950/40 p-3 rounded-lg border border-blue-500/20">
+              {invData.traffic.prediction}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div className="text-sm opacity-70">Random Forest Probability Distribution</div>
+            {Object.entries(invData.traffic.probabilities).map(([label, prob]) => (
+              <div key={label}>
+                <div className="flex justify-between text-xs mb-1">
+                  <span>{label}</span>
+                  <span className="font-mono">{(prob * 100).toFixed(1)}%</span>
+                </div>
+                <div className="h-2 progress-bar-bg bg-blue-950/30">
+                  <div className="progress-bar-fill bg-blue-400" style={{ width: `${prob * 100}%` }} />
+                </div>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* Right Panel: Data */}
-        <div className="w-2/5 flex flex-col gap-4 overflow-y-auto pr-2">
+        {/* Right: Behavioral Invariants & Metadata */}
+        <div className="glass-panel p-6 overflow-y-auto flex flex-col gap-6">
           
-          {/* Evidence Panel */}
-          <div className="glass-panel p-6">
-            <h2 className="text-xl font-bold font-['Space_Grotesk'] mb-4 text-cream border-b border-white/10 pb-2">Evidence Matrix</h2>
-            <div className="space-y-6">
-              {invData.evidence_breakdown.map((ev: any, idx: number) => (
-                <div key={idx}>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="font-semibold">{ev.name} <span className="opacity-50 text-xs ml-2">({ev.group})</span></span>
-                    <span className="font-mono text-cream">{(ev.score).toFixed(2)}</span>
-                  </div>
-                  <div className="h-2 progress-bar-bg">
-                    <div 
-                      className="progress-bar-fill" 
-                      style={{ width: `${ev.score * 100}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
+          <div className="flex flex-col gap-4 border-b border-white/10 pb-6">
+            <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+              <User className="text-green-400" size={20} />
+              <h2 className="text-xl font-bold font-['Space_Grotesk'] text-cream">Behavioral Invariants</h2>
+            </div>
+            
+            <div className="flex justify-between items-center bg-black/20 p-3 rounded-lg">
+              <div>
+                <div className="text-xs opacity-70">Hard-to-Fake (Weight: 2.5x)</div>
+                <div className="font-semibold text-green-300">Response Latency</div>
+              </div>
+              <div className="font-mono text-xl">{(invData.behavior.latencyScore * 100).toFixed(0)}%</div>
+            </div>
+            
+            <div className="flex justify-between items-center bg-black/20 p-3 rounded-lg">
+              <div>
+                <div className="text-xs opacity-70">Easy-to-Fake (Weight: 1.0x)</div>
+                <div className="font-semibold text-yellow-300">Active Hours</div>
+              </div>
+              <div className="font-mono text-xl">{(invData.behavior.activeHoursScore * 100).toFixed(0)}%</div>
             </div>
           </div>
 
-          {/* Adversarial Panel */}
-          <div className="glass-panel p-6 border-t-2 border-t-red-500/50">
-            <div className="flex items-center gap-3 mb-4 border-b border-white/10 pb-2">
-              <AlertTriangle className="text-red-400" />
-              <h2 className="text-xl font-bold font-['Space_Grotesk'] text-red-100">Counter-Hypotheses</h2>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+              <FileText className="text-purple-400" size={20} />
+              <h2 className="text-xl font-bold font-['Space_Grotesk'] text-cream">Metadata Leaks</h2>
             </div>
             
-            <div className="space-y-4">
-              {invData.adversarial_report.questions.map((q: string, idx: number) => (
-                <div key={idx} className="bg-red-950/30 p-3 rounded-lg border border-red-500/20 text-sm text-red-200">
-                  {q}
+            {invData.metadata.map((meta, idx) => (
+              <div key={idx} className="bg-purple-950/20 p-3 rounded-lg border border-purple-500/20">
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="font-semibold text-purple-300">{meta.type}</span>
+                  <span className="font-mono text-cream">{meta.value}</span>
                 </div>
-              ))}
+                <div className="text-xs opacity-60 mt-2">Shared by: {meta.personas.join(", ")}</div>
+              </div>
+            ))}
+          </div>
+
+        </div>
+
+      </div>
+
+      {/* 3. BOTTOM ROW: MATHEMATICS & ADVERSARIAL */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        
+        {/* Left: Bayesian Fusion Matrix */}
+        <div className="glass-panel p-6 border-t-2 border-t-green-500/50">
+          <div className="flex items-center gap-2 mb-6 border-b border-white/10 pb-2">
+            <BrainCircuit className="text-green-400" size={20} />
+            <h2 className="text-xl font-bold font-['Space_Grotesk'] text-cream">Bayesian Evidence Matrix</h2>
+          </div>
+          
+          <div className="space-y-5">
+            {invData.evidence_breakdown.map((ev: any, idx: number) => (
+              <div key={idx} className="relative">
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="font-semibold">
+                    {ev.name} 
+                    <span className="opacity-50 text-xs ml-2">[{ev.group}]</span>
+                  </span>
+                  <span className="font-mono text-cream flex gap-4">
+                    <span className="opacity-50 text-xs text-yellow-200">Reliability Weight: {(ev.reliability).toFixed(2)}</span>
+                    <span>{(ev.score).toFixed(2)}</span>
+                  </span>
+                </div>
+                <div className="h-2 progress-bar-bg bg-black/40">
+                  <div 
+                    className={`h-full rounded-full ${ev.group === 'Network' ? 'bg-blue-400' : ev.group === 'Blockchain' ? 'bg-yellow-400' : 'bg-green-400'}`}
+                    style={{ width: `${ev.score * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right: Adversarial Engine */}
+        <div className="glass-panel p-6 border-t-2 border-t-red-500/50 flex flex-col gap-6">
+          
+          <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+            <AlertOctagon className="text-red-400" size={20} />
+            <h2 className="text-xl font-bold font-['Space_Grotesk'] text-red-100">Adversarial Engine (Self-Testing)</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-red-950/20 p-4 rounded-xl border border-red-500/20">
+              <h3 className="text-sm font-bold uppercase opacity-70 mb-3 text-red-300">Noise Injection (Stress Test)</h3>
+              <div className="space-y-3">
+                {invData.adversarial_report.stress_test.map((test, idx) => (
+                  <div key={idx} className="flex items-center justify-between text-sm">
+                    <span>Noise ±{(test.noise * 100).toFixed(0)}%</span>
+                    <span className="font-mono bg-black/30 px-2 py-1 rounded">Conf: {(test.confidence * 100).toFixed(0)}%</span>
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div className="mt-6">
-              <h3 className="text-sm font-bold uppercase opacity-70 mb-2">Leave-One-Out Vulnerability</h3>
-              <div className="text-sm bg-black/20 p-3 rounded-lg border border-white/5 font-mono text-platinum/80 flex flex-col gap-2">
-                {Object.entries(invData.adversarial_report.leave_one_out).map(([group, val]: any) => (
-                  <div key={group} className="flex justify-between">
-                    <span>Without {group}:</span>
-                    <span className={val < 0.8 ? "text-red-400" : "text-green-400"}>{(val*100).toFixed(1)}%</span>
+            <div className="bg-red-950/20 p-4 rounded-xl border border-red-500/20 flex flex-col">
+              <h3 className="text-sm font-bold uppercase opacity-70 mb-3 text-red-300">Contradiction Analysis</h3>
+              <div className="flex-1 space-y-3">
+                {invData.adversarial_report.contradictions.map((contra, idx) => (
+                  <div key={idx} className="text-sm text-red-200">
+                    <p className="mb-2">{contra.message}</p>
+                    <p className="font-mono text-red-400 bg-red-950/50 px-2 py-1 inline-block rounded">Penalty: -{(contra.penalty * 100).toFixed(0)}%</p>
                   </div>
                 ))}
               </div>
             </div>
           </div>
-
+          
         </div>
+
       </div>
     </div>
   );

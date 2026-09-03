@@ -15,3 +15,7 @@ networkx
 Pillow
 fastapi
 uvicorn
+requests
+shodan
+vt-py
+beautifulsoup4

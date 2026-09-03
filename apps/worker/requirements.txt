@@ -1,0 +1,9 @@
+celery==5.3.6
+redis==5.0.1
+sqlalchemy==2.0.25
+psycopg2-binary==2.9.9
+neo4j==5.17.0
+requests==2.31.0
+shodan==1.31.0
+vt-py==0.18.0
+python-dotenv==1.0.1

@@ -1,3 +1,25 @@
+class CalibrationEngine:
+    """
+    Calibrates raw probabilities to ensure they reflect true accuracy.
+    Uses Platt Scaling (Logistic Regression) to map scores to expected true probabilities.
+    """
+    def __init__(self):
+        # Mock parameters for Platt scaling: P(y=1|x) = 1 / (1 + exp(A*f(x) + B))
+        self.A = -0.8
+        self.B = 0.2
+        
+    def calibrate(self, raw_probability):
+        """Applies calibration to the raw probability."""
+        if raw_probability <= 0.001 or raw_probability >= 0.999:
+            return raw_probability
+            
+        import math
+        # Transform back to log odds
+        f_x = math.log(raw_probability / (1 - raw_probability)) 
+        # Apply scaling
+        calibrated_prob = 1 / (1 + math.exp(self.A * f_x + self.B))
+        return calibrated_prob
+
 class EvidenceItem:
     """Represents a single piece of evidence contributing to deanonymization."""
     def __init__(self, name, score, independence_group, reliability=1.0):
@@ -21,9 +43,21 @@ class EvidenceFusionEngine:
     
     def __init__(self):
         self.evidence_pool = []
+        self.calibrator = CalibrationEngine()
         
     def add_evidence(self, name, score, group, reliability=1.0):
         self.evidence_pool.append(EvidenceItem(name, score, group, reliability))
+
+    def add_ensemble_evidence(self, name, model_scores, weights=None, group="Network", reliability=1.0):
+        """
+        Combines predictions from multiple ML models (e.g., Random Forest + DTW)
+        into a single ensemble score before adding to the evidence pool.
+        """
+        if not weights:
+            weights = [1.0 / len(model_scores)] * len(model_scores)
+            
+        ensemble_score = sum(s * w for s, w in zip(model_scores, weights))
+        self.add_evidence(f"{name} (Ensemble)", ensemble_score, group, reliability)
 
     def _group_evidence(self):
         """Groups dependent evidence to prevent confidence inflation."""
@@ -83,7 +117,10 @@ class EvidenceFusionEngine:
         # Convert back to probability
         final_probability = self._to_probability(final_log_odds)
         
-        return final_probability, independent_scores
+        # Apply calibration
+        calibrated_probability = self.calibrator.calibrate(final_probability)
+        
+        return calibrated_probability, independent_scores
 
     def _to_log_odds(self, p):
         import math

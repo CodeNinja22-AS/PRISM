@@ -85,6 +85,60 @@ class AdversarialEngine:
         robustness = max(0.0, 1.0 - (max_drop / base))
         return robustness
 
+    def run_stress_test(self, max_noise=0.3, steps=3, prior=0.1):
+        """
+        Injects artificial noise (e.g., +/- variance) into evidence scores 
+        to see at what point the hypothesis collapses (confidence drops < 50%).
+        """
+        import random
+        base_confidence, _ = self.base_engine.calculate_hybrid_bayesian_probability(prior=prior)
+        
+        stress_results = []
+        for step in range(1, steps + 1):
+            noise_level = (max_noise / steps) * step
+            
+            # Create a noisy fusion engine
+            temp_engine = EvidenceFusionEngine()
+            for ev in self.base_engine.evidence_pool:
+                # Add random noise bounded by noise_level
+                noise = random.uniform(-noise_level, noise_level)
+                noisy_score = max(0.01, min(0.99, ev.score + noise))
+                # Degrade reliability as noise goes up
+                degraded_reliability = max(0.1, ev.reliability * (1.0 - noise_level))
+                
+                temp_engine.add_evidence(ev.name, noisy_score, ev.independence_group, degraded_reliability)
+                
+            noisy_confidence, _ = temp_engine.calculate_hybrid_bayesian_probability(prior=prior)
+            stress_results.append({
+                "noise_injected": noise_level,
+                "resulting_confidence": noisy_confidence
+            })
+            
+        return stress_results
+
+    def run_contradiction_analysis(self):
+        """
+        Actively hunts for 'Killer Defeats' - evidence that actively contradicts the hypothesis,
+        rather than just missing evidence.
+        Returns a penalty score that should be applied to the final probability.
+        """
+        contradictions = []
+        penalty = 0.0
+        
+        for ev in self.base_engine.evidence_pool:
+            if ev.score < 0.2: # Strong negative indicator
+                if ev.independence_group == "Behavior" and "Overlap" in ev.name:
+                    contradictions.append(f"HARD CONTRADICTION: Suspect and Target behavior actively disjoint ({ev.name}={ev.score}).")
+                    penalty += 0.4
+                elif ev.independence_group == "Infrastructure":
+                    contradictions.append(f"WEAK CONTRADICTION: Conflicting infrastructure patterns ({ev.name}={ev.score}).")
+                    penalty += 0.15
+                    
+        return {
+            "contradictions_found": contradictions,
+            "recommended_probability_penalty": min(0.9, penalty)
+        }
+
 
 if __name__ == "__main__":
     print("--- PHASE 13: Adversarial Analysis Engine ---")
@@ -119,3 +173,18 @@ if __name__ == "__main__":
     print(f"  Attribution robustness : {robustness:.2%}")
     print(f"\n  Note: Attribution is strongly dependent on [{results['most_critical']}] evidence.")
     print(f"  (Removing it causes a {results['max_drop']:.2%} drop in overall confidence).")
+    
+    # 4. Stress and Contradiction Test
+    print("\n[Stress Testing (Noise Injection)]")
+    stress_res = adv_engine.run_stress_test(max_noise=0.3, steps=3)
+    for res in stress_res:
+        print(f"  Noise: +/-{res['noise_injected']:.0%} -> Confidence: {res['resulting_confidence']:.2%}")
+        
+    print("\n[Contradiction Analysis]")
+    # Artificially inject a contradiction for the test output
+    fusion_engine.add_evidence("Active Hours Overlap", 0.05, group="Behavior", reliability=0.9)
+    contra_res = adv_engine.run_contradiction_analysis()
+    if contra_res["contradictions_found"]:
+        for c in contra_res["contradictions_found"]:
+             print(f"  ! {c}")
+        print(f"  -> Recommended Penalty: -{contra_res['recommended_probability_penalty']:.2%}")

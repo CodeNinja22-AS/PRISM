@@ -8,11 +8,8 @@ COPY apps/api/requirements.txt .
 # Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy the whole api directory
-COPY apps/api ./apps/api
+# Copy the whole api directory contents into /app
+COPY apps/api .
 
-# Set PYTHONPATH so absolute imports work
-ENV PYTHONPATH=/app/apps
-
-# Run uvicorn
-CMD ["uvicorn", "apps.api.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Run uvicorn directly from the app root
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]

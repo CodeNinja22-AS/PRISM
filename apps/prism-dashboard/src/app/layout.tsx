@@ -31,16 +31,16 @@ export default function RootLayout({
               <Target size={20} />
               <span>Active Investigation</span>
             </Link>
-            <Link href="#" className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-colors opacity-50 cursor-not-allowed">
+            <Link href="/actor-clusters" className="flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-colors">
               <Layers size={20} />
               <span>Actor Clusters</span>
             </Link>
           </nav>
 
-          <div className="mt-auto opacity-50 flex items-center gap-3 p-3 cursor-not-allowed">
+          <Link href="/settings" className="mt-auto flex items-center gap-3 p-3 rounded-lg hover:bg-white/10 transition-colors">
             <Settings size={20} />
             <span>Settings</span>
-          </div>
+          </Link>
         </aside>
         <main className="flex-1 p-4 overflow-y-auto">
           {children}

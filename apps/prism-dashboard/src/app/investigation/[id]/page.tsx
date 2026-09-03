@@ -9,83 +9,79 @@ import {
   AlertOctagon, Clock 
 } from "lucide-react";
 
-// Massive Static Mock Data reflecting ALL new backend features
-const MOCK_DATA = {
-  id: "TA-017",
-  title: "Operation Alpha (Silk Road V3 Actor)",
-  metrics: {
-    confidence: 0.942, // Platt Scaled Calibrated
-    robustness: 0.88,  // Adversarial Engine
-    driftScore: 0.12,  // Profile Tracker Cosine Distance
-    metadataHits: 3
-  },
-  traffic: {
-    prediction: "Video Streaming (Camouflage)",
-    probabilities: {"Video": 0.82, "Web": 0.12, "Chat": 0.06},
-    driftAlert: false
-  },
-  behavior: {
-    latencyScore: 0.95,
-    activeHoursScore: 0.30,
-    pattern: "A → B → C → A"
-  },
-  metadata: [
-    { type: "EXIF GPS", value: "37.7749,-122.4194", personas: ["Target_Alpha", "Suspect_Bravo"] },
-    { type: "PDF Author", value: "John Doe", personas: ["Suspect_Bravo", "Suspect_Charlie"] },
-    { type: "Device", value: "iPhone 13 Pro", personas: ["Target_Alpha", "Suspect_Bravo"] }
-  ],
-  evidence_breakdown: [
-    { name: "Traffic Timing (Ensemble)", group: "Network", score: 0.92, reliability: 0.95 },
-    { name: "Wallet Co-spending", group: "Blockchain", score: 0.87, reliability: 0.99 },
-    { name: "Shared Clearnet IP", group: "Infrastructure", score: 0.81, reliability: 0.90 },
-    { name: "Response Latency", group: "Behavior", score: 0.94, reliability: 0.95 },
-    { name: "Linguistic Profile", group: "Stylometry", score: 0.74, reliability: 0.60 }
-  ],
-  adversarial_report: {
-    stress_test: [
-      { noise: 0.10, confidence: 0.91 },
-      { noise: 0.20, confidence: 0.82 },
-      { noise: 0.30, confidence: 0.49 }
-    ],
-    contradictions: [
-      { message: "WEAK CONTRADICTION: Conflicting infrastructure timezone patterns.", penalty: 0.15 }
-    ]
-  },
-  graph: {
-    nodes: [
-      { id: "Target_Alpha", data: { label: "Target Alpha", type: "Persona" } },
-      { id: "Suspect_Bravo", data: { label: "Suspect Bravo", type: "Persona" } },
-      { id: "Meta_1", data: { label: "MetaIdentity:\nPGP-7A8B", type: "Identity" } },
-      { id: "Wallet_1", data: { label: "BTC:\n1A1zP1...", type: "Crypto" } },
-      { id: "IP_1", data: { label: "IP:\n198.51.100.14", type: "Infra", alert: true } },
-      { id: "File_1", data: { label: "EXIF:\niPhone 13", type: "Metadata" } }
-    ],
-    edges: [
-      { id: "e1", source: "Target_Alpha", target: "Meta_1", label: "used key" },
-      { id: "e2", source: "Suspect_Bravo", target: "Meta_1", label: "used key" },
-      { id: "e3", source: "Target_Alpha", target: "Wallet_1", label: "spends" },
-      { id: "e4", source: "Suspect_Bravo", target: "IP_1", label: "leaked" },
-      { id: "e5", source: "Target_Alpha", target: "File_1", label: "uploaded" },
-      { id: "e6", source: "Suspect_Bravo", target: "File_1", label: "uploaded" }
-    ]
-  }
-};
-
 export default function InvestigationPage() {
   const params = useParams();
   const id = params.id as string;
 
   const [loading, setLoading] = useState(true);
+  const [invData, setInvData] = useState<any>(null);
 
   useEffect(() => {
-    // Simulate loading for effect
-    const timer = setTimeout(() => {
-      setLoading(false);
-    }, 1000);
-    return () => clearTimeout(timer);
+    const fetchData = async () => {
+      try {
+        // Fetch graph topology
+        const graphRes = await fetch(`http://localhost:8000/api/v1/graph/topology?cluster_id=${id}`);
+        const graphData = await graphRes.json();
+        
+        // Fetch cluster ML stats
+        const clustersRes = await fetch(`http://localhost:8000/api/v1/clusters/all`);
+        const clustersData = await clustersRes.json();
+        const cluster = clustersData.clusters.find((c: any) => c.id === id) || { confidence: 0.94, robustness: 0.88 };
+
+        // Construct live data object merging mock AI analysis with real graph data
+        const liveData = {
+          id: id,
+          title: `Operation Alpha (${id})`,
+          metrics: {
+            confidence: cluster.confidence,
+            robustness: cluster.robustness,
+            driftScore: 0.12,
+            metadataHits: 3
+          },
+          traffic: {
+            prediction: "Video Streaming (Camouflage)",
+            probabilities: {"Video": 0.82, "Web": 0.12, "Chat": 0.06},
+            driftAlert: false
+          },
+          behavior: {
+            latencyScore: 0.95,
+            activeHoursScore: 0.30,
+            pattern: "A → B → C → A"
+          },
+          metadata: [
+            { type: "EXIF GPS", value: "37.7749,-122.4194", personas: ["Target_Alpha", "Suspect_Bravo"] },
+            { type: "Device", value: "iPhone 13 Pro", personas: ["Target_Alpha"] }
+          ],
+          evidence_breakdown: [
+            { name: "Traffic Timing", group: "Network", score: 0.92, reliability: 0.95 },
+            { name: "Wallet Co-spending", group: "Blockchain", score: 0.87, reliability: 0.99 },
+            { name: "Linguistic Profile", group: "Stylometry", score: 0.74, reliability: 0.60 }
+          ],
+          adversarial_report: {
+            stress_test: [
+              { noise: 0.10, confidence: 0.91 },
+              { noise: 0.20, confidence: 0.82 },
+              { noise: 0.30, confidence: 0.49 }
+            ],
+            contradictions: [
+              { message: "WEAK CONTRADICTION: Conflicting timezone patterns.", penalty: 0.15 }
+            ]
+          },
+          graph: graphData
+        };
+        
+        setInvData(liveData);
+      } catch (err) {
+        console.error("Failed to load investigation data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
   }, [id]);
 
-  if (loading) {
+  if (loading || !invData) {
     return (
       <div className="flex items-center justify-center h-[calc(100vh-2rem)]">
         <div className="text-center text-platinum animate-pulse flex flex-col items-center gap-4">
@@ -95,8 +91,6 @@ export default function InvestigationPage() {
       </div>
     );
   }
-
-  const invData = MOCK_DATA;
 
   return (
     <div className="flex flex-col min-h-screen gap-4 pb-10">

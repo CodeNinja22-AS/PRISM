@@ -10,8 +10,9 @@ from pydantic import BaseModel
 from services.ml_engine.fusion import EvidenceFusionEngine
 from services.ml_engine.adversarial import AdversarialEngine
 from services.graph_engine.neo4j_driver import GraphEngine
-
-router = APIRouter()
+from neo4j import Session as Neo4jSession
+from apps.api.db.session import get_neo4j
+from fastapi import APIRouter, Depends, HTTPException
 graph_engine = GraphEngine()
 
 import uuid

@@ -10,7 +10,6 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the whole api directory
 COPY apps/api ./apps/api
-COPY core ./core
 
 # Set PYTHONPATH so absolute imports work
 ENV PYTHONPATH=/app/apps

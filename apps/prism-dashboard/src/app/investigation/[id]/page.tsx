@@ -20,11 +20,11 @@ export default function InvestigationPage() {
     const fetchData = async () => {
       try {
         // Fetch graph topology
-        const graphRes = await fetch(`http://localhost:8000/api/v1/graph/topology?cluster_id=${id}`);
+        const graphRes = await fetch(`https://prism-production-fd7b.up.railway.app/api/v1/graph/topology?cluster_id=${id}`);
         const graphData = await graphRes.json();
         
         // Fetch cluster ML stats
-        const clustersRes = await fetch(`http://localhost:8000/api/v1/clusters/all`);
+        const clustersRes = await fetch(`https://prism-production-fd7b.up.railway.app/api/v1/clusters/all`);
         const clustersData = await clustersRes.json();
         const cluster = clustersData.clusters.find((c: any) => c.id === id) || { confidence: 0.94, robustness: 0.88 };
 

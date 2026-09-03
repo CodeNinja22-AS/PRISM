@@ -4,3 +4,4 @@ sqlalchemy
 psycopg2-binary
 neo4j==5.16.0
 pydantic-settings==2.1.0
+firebase-functions>=0.1.0

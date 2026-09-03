@@ -161,7 +161,7 @@ export default function InvestigationPage() {
 
           <div className="space-y-3">
             <div className="text-sm opacity-70">Random Forest Probability Distribution</div>
-            {Object.entries(invData.traffic.probabilities).map(([label, prob]) => (
+            {Object.entries(invData.traffic.probabilities).map(([label, prob]: [string, any]) => (
               <div key={label}>
                 <div className="flex justify-between text-xs mb-1">
                   <span>{label}</span>
@@ -207,7 +207,7 @@ export default function InvestigationPage() {
               <h2 className="text-xl font-bold font-['Space_Grotesk'] text-cream">Metadata Leaks</h2>
             </div>
             
-            {invData.metadata.map((meta, idx) => (
+            {invData.metadata.map((meta: any, idx: number) => (
               <div key={idx} className="bg-purple-950/20 p-3 rounded-lg border border-purple-500/20">
                 <div className="flex justify-between text-sm mb-1">
                   <span className="font-semibold text-purple-300">{meta.type}</span>
@@ -268,7 +268,7 @@ export default function InvestigationPage() {
             <div className="bg-red-950/20 p-4 rounded-xl border border-red-500/20">
               <h3 className="text-sm font-bold uppercase opacity-70 mb-3 text-red-300">Noise Injection (Stress Test)</h3>
               <div className="space-y-3">
-                {invData.adversarial_report.stress_test.map((test, idx) => (
+                {invData.adversarial_report.stress_test.map((test: any, idx: number) => (
                   <div key={idx} className="flex items-center justify-between text-sm">
                     <span>Noise ±{(test.noise * 100).toFixed(0)}%</span>
                     <span className="font-mono bg-black/30 px-2 py-1 rounded">Conf: {(test.confidence * 100).toFixed(0)}%</span>
@@ -280,7 +280,7 @@ export default function InvestigationPage() {
             <div className="bg-red-950/20 p-4 rounded-xl border border-red-500/20 flex flex-col">
               <h3 className="text-sm font-bold uppercase opacity-70 mb-3 text-red-300">Contradiction Analysis</h3>
               <div className="flex-1 space-y-3">
-                {invData.adversarial_report.contradictions.map((contra, idx) => (
+                {invData.adversarial_report.contradictions.map((contra: any, idx: number) => (
                   <div key={idx} className="text-sm text-red-200">
                     <p className="mb-2">{contra.message}</p>
                     <p className="font-mono text-red-400 bg-red-950/50 px-2 py-1 inline-block rounded">Penalty: -{(contra.penalty * 100).toFixed(0)}%</p>
